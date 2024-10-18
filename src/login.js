@@ -11,8 +11,7 @@ function Login() {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('/api/login', { username, password });
-            localStorage.setItem('token', response.data.token); // Store JWT token in localStorage
+            await axios.post('/api/login', { username, password });
             navigate('/'); // Redirect to the home page (task list)
         } catch (err) {
             setError('Invalid username or password');
