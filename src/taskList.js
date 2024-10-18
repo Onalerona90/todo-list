@@ -14,24 +14,19 @@ function TaskList() {
     const [deadline, setDeadline] = useState('');
     const [priority, setPriority] = useState(0);
     const [error, setError] = useState('');
-    const token = localStorage.getItem('token');
     const navigate = useNavigate();
 
     // Redirect to login if not authenticated
     useEffect(() => {
-        if (!token) {
-            navigate('/login');
-        } else {
-            axios.get('/api/tasks', { headers: { Authorization: token } })
-                .then(res => setTasks(res.data))
-                .catch(err => console.error(err));
-        }
-    }, [token, navigate]);
+        axios.get('/api/tasks')
+            .then(res => setTasks(res.data))
+            .catch(err => console.error(err));
+    }, [navigate]);
 
     // Add new task function
     const addTask = () => {
         if (newTask && deadline) {
-            axios.post('/api/tasks', { description: newTask, deadline, priority }, { headers: { Authorization: token } })
+            axios.post('/api/tasks', { description: newTask, deadline, priority })
                 .then(res => {
                     setTasks([...tasks, res.data]); // Use response task data to update state
                     setNewTask('');
@@ -46,7 +41,7 @@ function TaskList() {
 
     // Mark task as complete
     const completeTask = (id) => {
-        axios.put(`/api/tasks/${id}`, {}, { headers: { Authorization: token } })
+        axios.put(`/api/tasks/${id}`, {})
             .then(res => {
                 setTasks(tasks.map(task => task.id === id ? { ...task, completed: true } : task));
             })
