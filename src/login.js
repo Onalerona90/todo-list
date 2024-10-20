@@ -11,13 +11,22 @@ function Login() {
 
     const handleLogin = async () => {
         try {
-            const userAuth = await axios.post('http://localhost:5000/login', {
-                username,
+
+            const response = await axios.post('http://localhost/php-backend/api/auth.php?action=login', { 
+                username, 
                 password
-            });
-            if (userAuth.status === 200) navigate('/'); // Redirect to the home page (task list)
+			},
+			{
+				withCredentials: true
+			}
+            );
+
+			// Redirect the user to the main task page after login.
+			if (response.data.message === 'Login successful') 
+            	navigate('/'); // Redirect to the home page (task list)
+
         } catch (err) {
-            setError('Invalid username or password');
+            setError('Something went wrong!!! Contact the administrator with the error displayed.\n', error, err);
         }
     };
 
