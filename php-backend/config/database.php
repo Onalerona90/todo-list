@@ -3,7 +3,7 @@
 $host = 'localhost';
 $dbname = 'todo_app';
 $user = 'root';
-$pass = 'yourpassword';
+$pass = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);

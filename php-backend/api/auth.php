@@ -64,15 +64,28 @@ function register() {
 // Login user
 function login() {
     global $pdo;
+	
+	// Read the raw POST data
+	$input = file_get_contents('php://input');
+	$requestData = json_decode($input, true);
 
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+	// Check if the request data was successfully parsed
+	if ($requestData === null) {
+		// Handle the error
+		http_response_code(400);
+		echo json_encode(['error' => 'Invalid JSON']);
+		exit;
+	}
 
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
+    $username = $requestData['username'];
+    $password = $requestData['password'];
+
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
+	$stmt->bindParam(':username', $username);
+    $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($user && password_verify($password, $user['password'])) {
+    if ($user && verifyPassword($password, $user['password'])) {
         // Create a session or store user info in a cookie
         session_start();
         $_SESSION['user_id'] = $user['id'];
