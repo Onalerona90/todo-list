@@ -11,8 +11,11 @@ function Login() {
 
     const handleLogin = async () => {
         try {
-            await axios.post('/api/login', { username, password });
-            navigate('/'); // Redirect to the home page (task list)
+            const userAuth = await axios.post('http://localhost:5000/login', {
+                username,
+                password
+            });
+            if (userAuth.status === 200) navigate('/'); // Redirect to the home page (task list)
         } catch (err) {
             setError('Invalid username or password');
         }

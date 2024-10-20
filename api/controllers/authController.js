@@ -28,12 +28,7 @@ const login = async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ message: 'Invalid password' });
 
-        // Generate a token and save it to the database
-        const token = uuidv4();
-        await db.execute('UPDATE users SET token = ? WHERE id = ?', [token, user.id]);
-
-        // Send the token to the client
-        res.json({ message: 'Login successful', token });
+        res.json({ message: 'Login successful'});
     } catch (err) {
         res.status(500).json({ message: 'Error logging in', error: err });
     }
