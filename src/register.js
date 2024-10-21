@@ -3,15 +3,15 @@ import { TextField, Button, Container, Box, Typography, Card, CardContent, Alert
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function Login() {
+function Register() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleRegister = async () => {
         try {
-            const response = await axios.post('http://localhost/todo-list/php-backend/api/auth.php?action=login', {
+            const response = await axios.post('http://localhost/todo-list/php-backend/api/auth.php?action=register', {
                 username, 
                 password
 			},
@@ -30,13 +30,13 @@ function Login() {
             // Handle specific error message if available
 			const errorMessage = err.response && err.response.data && err.response.data.message 
 			? err.response.data.message 
-			: 'Invalid username or password';
+			: 'All Field are required';
 			setError(errorMessage);
         }
     };
 
-    const registerUser = () => {
-        navigate('/register');
+    const userLogin = () => {
+        navigate('/login');
     }
 
     return (
@@ -45,7 +45,7 @@ function Login() {
                 <Card elevation={3}>
                     <CardContent>
                         <Typography variant="h5" component="h1" gutterBottom>
-                            Login
+                            Register
                         </Typography>
                         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                         <TextField
@@ -69,18 +69,18 @@ function Login() {
                             fullWidth
                             variant="contained"
                             color="primary"
-                            onClick={handleLogin}
+                            onClick={handleRegister}
                         >
-                            Login
+                            Register
                         </Button>
                         <Typography
                             component="p"
                             align='center'
                             pt={2}
                             style={{cursor: 'pointer' }}
-                            onClick={registerUser}    
+                            onClick={userLogin}
                         >
-                            Register
+                            Login
                         </Typography>
                     </CardContent>
                 </Card>
@@ -89,4 +89,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default Register;

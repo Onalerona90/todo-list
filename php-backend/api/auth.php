@@ -12,7 +12,6 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
-        // may also be using PUT, PATCH, HEAD etc
         header("Access-Control-Allow-Methods: POST");         
 
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
@@ -49,11 +48,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 function register() {
     global $pdo;
 
-    $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    // Read the raw POST data
+	$input = file_get_contents('php://input');
+	$requestData = json_decode($input, true);
 
-    $stmt = $pdo->prepare("INSERT INTO users (id, username, password) VALUES (UUID(), ?, ?)");
-    if ($stmt->execute([$username, $password])) {
+	// Check if the request data was successfully parsed
+	if ($requestData === null) {
+		// Handle the error
+		http_response_code(400);
+		echo json_encode(['error' => 'Invalid JSON']);
+		exit;
+	}
+
+    $username = $requestData['username'];
+    $password = hashPassword($requestData['password']);
+
+    if (empty($username))
+        echo json_encode(['message' => 'Username is required']);
+
+    if (empty($password))
+        echo json_encode(['message' => 'Password is required']);
+
+    $stmt = $pdo->prepare("INSERT INTO users (id, username, password) VALUES (UUID(), :username, :password)");
+    $stmt->bindParam(':username', $username);
+    $stmt->bindParam(':password', $password);
+
+    if ($stmt->execute()) {
         echo json_encode(['message' => 'Registration successful']);
     } else {
         http_response_code(500);
@@ -98,7 +118,7 @@ function login() {
 
 // Logout user
 function logout() {
-    session_destroy();
+    session_destroy($_SESSION['user_id']);
     echo json_encode(['message' => 'Logout successful']);
 }
 
