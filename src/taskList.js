@@ -42,9 +42,7 @@ function TaskList() {
             })
             .then(res => {
                 setTasks([...tasks, res.data]); // Use response task data to update state
-                setNewTask('');
-                setDeadline('');
-                setPriority(0);
+                window.location.reload();
             })
             .catch(err => setError('Failed to add task. Please try again.'));
         } else {
