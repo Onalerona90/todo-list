@@ -41,7 +41,7 @@ function TaskList() {
                 withCredentials: true // Include session cookies
             })
             .then(res => {
-                setTasks([...tasks, res.data]); // Use response task data to update state
+                setTasks(res.data); // Use response task data to update state
                 window.location.reload();
             })
             .catch(err => setError('Failed to add task. Please try again.'));
