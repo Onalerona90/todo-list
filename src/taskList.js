@@ -16,24 +16,36 @@ function TaskList() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // Redirect to login if not authenticated
+    // Fetch tasks on component mount
     useEffect(() => {
-        axios.get('/api/tasks')
-            .then(res => setTasks(res.data))
-            .catch(err => console.error(err));
+		try {
+			const response = axios.get('http://localhost/todo-list/php-backend/api/tasks.php?action=tasks', {
+				withCredentials: true // Include session cookies
+			});
+			console.log(response.data);
+		} catch (err) {
+			console.error(err);
+            navigate('/login'); // Redirect to login if not authenticated
+		}
     }, [navigate]);
 
     // Add new task function
     const addTask = () => {
         if (newTask && deadline) {
-            axios.post('/api/tasks', { description: newTask, deadline, priority })
-                .then(res => {
-                    setTasks([...tasks, res.data]); // Use response task data to update state
-                    setNewTask('');
-                    setDeadline('');
-                    setPriority(0);
-                })
-                .catch(err => setError('Failed to add task. Please try again.'));
+            axios.post('http://localhost/todo-list/php-backend/api/tasks.php?action=add', {
+                description: newTask,
+                deadline: deadline,
+                priority: priority
+            }, {
+                withCredentials: true // Include session cookies
+            })
+            .then(res => {
+                setTasks([...tasks, res.data]); // Use response task data to update state
+                setNewTask('');
+                setDeadline('');
+                setPriority(0);
+            })
+            .catch(err => setError('Failed to add task. Please try again.'));
         } else {
             setError('Please provide both task description and deadline.');
         }
@@ -41,16 +53,21 @@ function TaskList() {
 
     // Mark task as complete
     const completeTask = (id) => {
-        axios.put(`/api/tasks/${id}`, {})
-            .then(res => {
-                setTasks(tasks.map(task => task.id === id ? { ...task, completed: true } : task));
-            })
-            .catch(err => console.error(err));
+        axios.put(`http://localhost/todo-list/php-backend/api/tasks.php`, `id=${id}`, {
+            withCredentials: true, // Include session cookies
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(res => {
+            setTasks(tasks.map(task => task.id === id ? { ...task, completed: true } : task));
+        })
+        .catch(err => console.error(err));
     };
 
     // Logout function
-    const handleLogout = () => {
-        localStorage.removeItem('token');
+    const handleLogout = async () => {
+        await axios.post('http://localhost/todo-list/php-backend/api/auth.php?action=logout', {
+			withCredentials: true
+		});
         navigate('/login');
     };
 
