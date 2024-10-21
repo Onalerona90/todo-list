@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 require_once '../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'GET'  || $_SERVER['REQUEST_METHOD'] == 'PUT') {
     $action = $_GET['action'] ?? '';
 
     switch ($action) {
@@ -70,20 +70,33 @@ function getTasks() {
 }
 
 // Handle PUT request to complete a task
-// if ($_SERVER['REQUEST_METHOD'] === 'PUT' && isset($_GET['action']) && $_GET['action'] === 'complete' && isset($_GET['id'])) {
-//     $taskId = $_GET['id'];
-//     $userId = $_SESSION['user_id'];
+function updateTask() {
+	global $pdo;
+	session_start();
 
-//     $stmt = $pdo->prepare("UPDATE tasks SET completed = 1 WHERE id = ? AND user_id = ?");
-//     $stmt->execute([$taskId, $userId]);
+	if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['message' => 'Unauthorized']);
+        return;
+    }
 
-//     if ($stmt->rowCount() > 0) {
-//         echo json_encode(['message' => 'Task completed']);
-//     } else {
-//         http_response_code(400);
-//         echo json_encode(['message' => 'Task not found or you do not have permission']);
-//     }
-// }
+	if ($_SERVER['REQUEST_METHOD'] === 'PUT' && isset($_GET['action']) && $_GET['action'] === 'complete' && isset($_GET['id'])) {
+		$taskid = $_GET['id'];
+		$userid = $_SESSION['user_id'];
+
+		$stmt = $pdo->prepare("UPDATE tasks SET completed = 1 WHERE id = :taskid AND user_id = userid");
+		$stmt->bindParam(':taskid', $taskid);
+		$stmt->bindParam(':userid', $userid);
+		$stmt->execute();
+
+		if ($stmt->rowCount() > 0) {
+			echo json_encode(['message' => 'Task completed']);
+		} else {
+			http_response_code(400);
+			echo json_encode(['message' => 'Task not found or you do not have permission']);
+		}
+	}
+}
 
 // Add task
 function addTask() {

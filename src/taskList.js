@@ -18,15 +18,17 @@ function TaskList() {
 
     // Fetch tasks on component mount
     useEffect(() => {
-		try {
-			const response = axios.get('http://localhost/todo-list/php-backend/api/tasks.php?action=tasks', {
-				withCredentials: true // Include session cookies
-			});
-			console.log(response.data);
-		} catch (err) {
-			console.error(err);
+        axios.get('http://localhost/todo-list/php-backend/api/tasks.php?action=tasks', {
+            withCredentials: true // Include session cookies
+        })
+        .then(res => {
+			console.log(res.data);
+			setTasks(res.data)
+		})
+        .catch(err => {
+            console.error(err);
             navigate('/login'); // Redirect to login if not authenticated
-		}
+        });
     }, [navigate]);
 
     // Add new task function
@@ -53,7 +55,7 @@ function TaskList() {
 
     // Mark task as complete
     const completeTask = (id) => {
-        axios.put(`http://localhost/todo-list/php-backend/api/tasks.php`, `id=${id}`, {
+        axios.put(`http://localhost/todo-list/php-backend/api/tasks.php?action=update`, `id=${id}`, {
             withCredentials: true, // Include session cookies
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
@@ -145,7 +147,7 @@ function TaskList() {
                         Your Tasks
                     </Typography>
                     <Grid container spacing={2}>
-                        {tasks.map((task) => (
+						{Array.isArray(tasks) && tasks.map((task) => (
                             <Grid item xs={12} key={task.id}>
                                 <Card elevation={1} sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
                                     <CardContent sx={{ flexGrow: 1 }}>
