@@ -22,7 +22,6 @@ function TaskList() {
             withCredentials: true // Include session cookies
         })
         .then(res => {
-			console.log(res.data);
 			setTasks(res.data)
 		})
         .catch(err => {
@@ -55,9 +54,10 @@ function TaskList() {
 
     // Mark task as complete
     const completeTask = (id) => {
-        axios.put(`http://localhost/todo-list/php-backend/api/tasks.php?action=update`, `id=${id}`, {
+        axios.post(`http://localhost/todo-list/php-backend/api/tasks.php?action=complete`, {
+			id: `${id}`,
+		}, {
             withCredentials: true, // Include session cookies
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
         .then(res => {
             setTasks(tasks.map(task => task.id === id ? { ...task, completed: true } : task));

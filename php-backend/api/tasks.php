@@ -12,8 +12,9 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
-        // may also be using PUT, PATCH, HEAD etc
-        header("Access-Control-Allow-Methods: POST");         
+
+        header("Access-Control-Allow-Methods: POST");     
+        header("Access-Control-Allow-Methods: PUT");     
 
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
         header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
@@ -23,15 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 require_once '../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'GET'  || $_SERVER['REQUEST_METHOD'] == 'PUT') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'GET') {
     $action = $_GET['action'] ?? '';
 
     switch ($action) {
         case 'add':
             addTask();
             break;
-        case 'update':
-            updateTask();
+        case 'complete':
+            completeTask();
             break;
         case 'tasks':
             getTasks();
@@ -60,7 +61,7 @@ function getTasks() {
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 		$userid = $_SESSION['user_id'];
 
-		$stmt = $pdo->prepare("SELECT * FROM tasks WHERE user_id = :userid ORDER BY priority DESC");
+		$stmt = $pdo->prepare("SELECT * FROM tasks WHERE user_id = :userid ORDER BY priority ASC");
 		$stmt->bindParam(':userid', $userid);
 		$stmt->execute();
 		$tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -70,7 +71,7 @@ function getTasks() {
 }
 
 // Handle PUT request to complete a task
-function updateTask() {
+function completeTask() {
 	global $pdo;
 	session_start();
 
@@ -80,11 +81,23 @@ function updateTask() {
         return;
     }
 
-	if ($_SERVER['REQUEST_METHOD'] === 'PUT' && isset($_GET['action']) && $_GET['action'] === 'complete' && isset($_GET['id'])) {
-		$taskid = $_GET['id'];
+	// Read the raw POST data
+	$input = file_get_contents('php://input');
+	$requestData = json_decode($input, true);
+
+	// Check if the request data was successfully parsed
+	if ($requestData === null) {
+		// Handle the error
+		http_response_code(400);
+		echo json_encode(['error' => 'Invalid JSON']);
+		exit;
+	}
+
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		$taskid = $requestData['id'];
 		$userid = $_SESSION['user_id'];
 
-		$stmt = $pdo->prepare("UPDATE tasks SET completed = 1 WHERE id = :taskid AND user_id = userid");
+		$stmt = $pdo->prepare("UPDATE tasks SET completed = 1 WHERE id = :taskid AND user_id = :userid");
 		$stmt->bindParam(':taskid', $taskid);
 		$stmt->bindParam(':userid', $userid);
 		$stmt->execute();
@@ -122,7 +135,7 @@ function addTask() {
 	}
 
     $description = $requestData['description'];
-    $deadline = date($requestData['deadline']);
+    $deadline = $requestData['deadline'];
     $priority = $requestData['priority'];
 	$userid = ''. $_SESSION['user_id'] .'';
 
@@ -139,50 +152,5 @@ function addTask() {
         echo json_encode(['message' => 'Error adding task']);
     }
 }
-
-// // Update task
-// function updateTask() {
-//     global $pdo;
-//     session_start();
-
-//     if (!isset($_SESSION['user_id'])) {
-//         http_response_code(401);
-//         echo json_encode(['message' => 'Unauthorized']);
-//         return;
-//     }
-
-//     $taskId = $_POST['task_id'];
-//     $completed = $_POST['completed'];
-
-//     $stmt = $pdo->prepare("UPDATE tasks SET completed = ? WHERE id = ? AND user_id = ?");
-//     if ($stmt->execute([$completed, $taskId, $_SESSION['user_id']])) {
-//         echo json_encode(['message' => 'Task updated successfully']);
-//     } else {
-//         http_response_code(500);
-//         echo json_encode(['message' => 'Error updating task']);
-//     }
-// }
-
-// // Delete task
-// function deleteTask() {
-//     global $pdo;
-//     session_start();
-
-//     if (!isset($_SESSION['user_id'])) {
-//         http_response_code(401);
-//         echo json_encode(['message' => 'Unauthorized']);
-//         return;
-//     }
-
-//     $taskId = $_POST['task_id'];
-
-//     $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
-//     if ($stmt->execute([$taskId, $_SESSION['user_id']])) {
-//         echo json_encode(['message' => 'Task deleted successfully']);
-//     } else {
-//         http_response_code(500);
-//         echo json_encode(['message' => 'Error deleting task']);
-//     }
-// }
 
 ?>
